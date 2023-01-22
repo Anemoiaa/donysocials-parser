@@ -22,6 +22,7 @@ class LinkWriterMixin:
         with open(filename, 'w') as f:
             f.writelines(self.results)
 
+
 class Parser(LinkReaderMixin, LinkWriterMixin):
     """
     Class description
@@ -66,6 +67,7 @@ class Tiktok(Parser):
     def text_transform(self, text):
         return text
 
+
 class Youtube(Parser):
     """
     Class description
@@ -74,9 +76,9 @@ class Youtube(Parser):
     selector = '#contents #content #metadata-line span'
 
     def text_transform(self, text):
-        isRus = text.find('про')
-        if(isRus != -1):
-            return text[0: isRus]
+        is_rus = text.find('про')
+        if is_rus != -1:
+            return text[0: is_rus]
         else:
-           eng = text.find('vie')
-           return text[0: eng]
+            eng = text.find('vie')
+            return text[0: eng]
