@@ -13,4 +13,5 @@ class Settings(BaseSettings):
     INPUT_FILE_NAME: str
     OUTPUT_FILE_NAME: str
 
+
 settings = Settings(_env_file=DOTENV_FILE)

@@ -7,7 +7,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
 from config import settings
 
 
@@ -17,13 +16,17 @@ class LinkReaderMixin:
             return f.readlines()
 
 
-class LinkWriterMixin:
-    def write_results(self, filename: str = settings.OUTPUT_FILE_NAME) -> None:
-        with open(filename, 'w') as f:
-            f.writelines(self.results)
+class LinkWriterToSheetMixin:
+    def next_available_row(self):
+        str_list = list(filter(None, self.worksheet.col_values(1)))
+        return str(len(str_list) + 1)
+
+    def write_col(self, data):
+        self.worksheet.update_acell("A{}".format(self.next_row), data[0])
+        self.worksheet.update_acell("B{}".format(self.next_row), data[1])
 
 
-class Parser(LinkReaderMixin, LinkWriterMixin):
+class Parser(LinkReaderMixin, LinkWriterToSheetMixin):
     """
     Class description
     """
@@ -31,10 +34,11 @@ class Parser(LinkReaderMixin, LinkWriterMixin):
 
     selector: str = ''
 
-    def __init__(self, driver) -> None:
+    def __init__(self, driver, worksheet) -> None:
         self.driver = driver
         self.links = self.get_links()
-        self.results = []
+        self.worksheet = worksheet
+        self.next_row = self.next_available_row()
 
     @abstractmethod
     def text_transform(self, text):
@@ -42,17 +46,16 @@ class Parser(LinkReaderMixin, LinkWriterMixin):
 
     def parse(self) -> None:
         for link in self.links:
-            res = ''
             try:
                 self.driver.get(url=link)
                 content = WebDriverWait(self.driver, settings.PAGE_LOAD_WAITING_DELAY).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, self.selector))
                     )
-                res = f'{self.text_transform(content.text)}\n'
+                views = f'{self.text_transform(content.text)}\n'
             except BaseException as e:
                 logging.exception(e)
-                res = f'Что-то пошло не так...\n'
-            self.results.append(res)
+                views = f'Что-то пошло не так...\n'
+            self.write_col([link, views])
             time.sleep(settings.DELAY)
         self.driver.quit()
 
