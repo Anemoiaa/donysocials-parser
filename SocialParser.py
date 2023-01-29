@@ -10,23 +10,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from config import settings
 
 
-class LinkReaderMixin:
-    def get_links(self, filename: str = settings.INPUT_FILE_NAME):
-        with open(filename, 'r') as f:
-            return f.readlines()
+class LinkReaderFromSheetMixin:
+    def get_links(self):
+        arr = self.worksheet.col_values(1)
+        return arr[1::]
 
 
 class LinkWriterToSheetMixin:
-    def next_available_row(self):
-        str_list = list(filter(None, self.worksheet.col_values(1)))
-        return str(len(str_list) + 1)
-
     def write_col(self, data):
         self.worksheet.update_acell("A{}".format(self.next_row), data[0])
         self.worksheet.update_acell("B{}".format(self.next_row), data[1])
 
 
-class Parser(LinkReaderMixin, LinkWriterToSheetMixin):
+class Parser(LinkReaderFromSheetMixin, LinkWriterToSheetMixin):
     """
     Class description
     """
@@ -36,9 +32,9 @@ class Parser(LinkReaderMixin, LinkWriterToSheetMixin):
 
     def __init__(self, driver, worksheet) -> None:
         self.driver = driver
-        self.links = self.get_links()
         self.worksheet = worksheet
-        self.next_row = self.next_available_row()
+        self.links = self.get_links()
+        self.next_row = 2
 
     @abstractmethod
     def text_transform(self, text):
@@ -57,6 +53,7 @@ class Parser(LinkReaderMixin, LinkWriterToSheetMixin):
                 views = f'Что-то пошло не так...\n'
             self.write_col([link, views])
             time.sleep(settings.DELAY)
+            self.next_row += 1
         self.driver.quit()
 
 

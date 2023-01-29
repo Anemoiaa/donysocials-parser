@@ -10,8 +10,8 @@ DOTENV_FILE = os.path.join(BASE_DIR, '.env')
 class Settings(BaseSettings):
     DELAY: float
     PAGE_LOAD_WAITING_DELAY: float
-    INPUT_FILE_NAME: str
-    OUTPUT_FILE_NAME: str
+    SERVICE_ACCOUNT: str
+    SHEET_NAME: str
 
 
 settings = Settings(_env_file=DOTENV_FILE)
