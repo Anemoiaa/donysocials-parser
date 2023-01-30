@@ -2,6 +2,7 @@ import time
 import logging
 
 from abc import ABCMeta, abstractmethod
+import re
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -37,7 +38,7 @@ class Parser(LinkReaderFromSheetMixin, LinkWriterToSheetMixin):
         self.next_row = 2
 
     @abstractmethod
-    def text_transform(self, text):
+    def string_transform_to_views_amount(self, text):
         pass
 
     def parse(self) -> None:
@@ -47,7 +48,7 @@ class Parser(LinkReaderFromSheetMixin, LinkWriterToSheetMixin):
                 content = WebDriverWait(self.driver, settings.PAGE_LOAD_WAITING_DELAY).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, self.selector))
                     )
-                views = f'{self.text_transform(content.text)}'
+                views = f'{self.string_transform_to_views_amount(content.text)}'
             except BaseException as e:
                 logging.exception(e)
                 views = f'Что-то пошло не так...'
@@ -64,8 +65,15 @@ class Tiktok(Parser):
 
     selector = '[data-e2e=\'user-post-item-list\'] [data-e2e=\'video-views\']'
 
-    def text_transform(self, text):
-        return text
+    def string_transform_to_views_amount(self, text):
+        result = 0
+        if 'K' in text:
+            return int(float(text.split('K')[0]) * 1000)
+        try:
+            result = re.findall(r'\d+', text)[0]
+        except IndexError:
+            pass
+        return result
 
 
 class Youtube(Parser):
@@ -75,10 +83,12 @@ class Youtube(Parser):
 
     selector = '#contents #content #metadata-line span'
 
-    def text_transform(self, text):
-        is_rus = text.find('про')
-        if is_rus != -1:
-            return text[0: is_rus]
-        else:
-            eng = text.find('vie')
-            return text[0: eng]
+    def string_transform_to_views_amount(self, text):
+        result = 0
+        if 'K' in text:
+            return int(float(text.split('K')[0]) * 1000)
+        try:
+            result = re.findall(r'\d+', text)[0]
+        except IndexError:
+            pass
+        return result
