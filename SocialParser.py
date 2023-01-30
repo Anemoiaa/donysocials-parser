@@ -47,10 +47,10 @@ class Parser(LinkReaderFromSheetMixin, LinkWriterToSheetMixin):
                 content = WebDriverWait(self.driver, settings.PAGE_LOAD_WAITING_DELAY).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, self.selector))
                     )
-                views = f'{self.text_transform(content.text)}\n'
+                views = f'{self.text_transform(content.text)}'
             except BaseException as e:
                 logging.exception(e)
-                views = f'Что-то пошло не так...\n'
+                views = f'Что-то пошло не так...'
             self.write_col([link, views])
             time.sleep(settings.DELAY)
             self.next_row += 1
